@@ -3,10 +3,18 @@ describe('GitUserSearchController', function(){
 
   var ctrl;
 
-  beforeEach(inject(function($controller){
-    ctrl = $controller('GitUserSearchController');
-  }));
+  var scope;
+  var searchSpy = jasmine.createSpyObj('searchSpy', ['query']);
 
+  beforeEach(inject(function($rootScope, $controller, $q) {
+
+    scope = $rootScope.$new();
+
+    ctrl = $controller('GitUserSearchController', {
+      $scope: scope,
+      Search: searchSpy
+    });
+  }));
 
   it('initialises with an empty search result and term', function() {
     expect(ctrl.searchResult).toBeUndefined();
@@ -15,38 +23,22 @@ describe('GitUserSearchController', function(){
 
   describe('when searching for a user', function() {
 
-    var httpBackend;
-    beforeEach(inject(function($httpBackend) {
-      httpBackend = $httpBackend
-      httpBackend
-        .when("GET", "https://api.github.com/search/users?q=hello")
-        .respond(
-          { items: items }
-      );
-    }));
-
-    afterEach(function() {
-      httpBackend.verifyNoOutstandingExpectation();
-      httpBackend.verifyNoOutstandingRequest();
-    });
-    
-  var items = [
-    {
-      "login": "tansaku",
-      "avatar_url": "https://avatars.githubusercontent.com/u/30216?v=3",
-      "html_url": "https://github.com/tansaku"
-    },
-    {
-      "login": "stephenlloyd",
-      "avatar_url": "https://avatars.githubusercontent.com/u/196474?v=3",
-      "html_url": "https://github.com/stephenlloyd"
-    }
-  ];
+    // beforeEach(inject(backEnd));
+    //
+    // afterEach(function() {
+    //   httpBackend.verifyNoOutstandingExpectation();
+    //   httpBackend.verifyNoOutstandingRequest();
+    // });
 
     it('displays search results', function(){
       ctrl.searchTerm = 'hello';
+
+      inject(function($q) {
+        searchSpy.query.and.returnValue($q.when({data: {items: items}}));
+      });
       ctrl.doSearch();
-      httpBackend.flush();
+      scope.$apply();
+      // httpBackend.flush();
       expect(ctrl.searchResult.items).toEqual(items);
     });
 
